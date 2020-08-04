@@ -382,7 +382,7 @@ for i in range(2,3):
             
             bp_merge_dataset = pd.DataFrame([])
             # 데이터 쪼개는 window 크기
-            delta_time = 2
+            delta_time = 1
             # 데이터 전체 시간
             Data_logging_time = 60
             for time in range(0,Data_logging_time/delta_time):

@@ -1,8 +1,12 @@
 import numpy as np
 import pandas as pd
 import os
+from sklearn import datasets
+from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedShuffleSplit
 
-dataset_path = 'C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\Final_result_2.csv'
+dataset_path = 'C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\a.csv'
 dataset = pd.read_csv(dataset_path)
 print(dataset_path)
 
@@ -13,9 +17,22 @@ y = dataset.iloc[:, y_len]
 
 #%% 데이터 분리
 from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+X_train,X_test, y_train,y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
 
+'''#%% 교차검증
+# from sklearn.model_selection import KFold
 
+# scores = np.zeros(5)
+# cv = KFold(5, shuffle =True, random_state=0)
+# for i, (idx_train, idx_test) in enumerate(cv.split(df)):
+#     df_train = df.iloc[idx_train]
+#     df_test = df.iloc[idx_test]
+    
+#     model = sm.OLS.from_formula("MEDV~" + "+".join(boston.feature_names), data = df_train)
+#     result = model.fit()
+    
+
+'''
 #%% Feature Scaling
 from keras.utils import to_categorical
 from sklearn.preprocessing import StandardScaler
@@ -40,12 +57,12 @@ classifier.add(Dense(units = 12, activation = 'tanh', input_dim = 3))
 # Adding the second hidden layer
 classifier.add(Dense(units = 12, activation = 'tanh'))
 # Adding the output layer
-classifier.add(Dense(units = 3, activation = 'softmax'))
+classifier.add(Dense(units = 10, activation = 'softmax'))
 # Compiling the ANN
-opt=optimizers.Adam(lr=0.000001)
+opt=optimizers.Adam(lr=0.01)
 classifier.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
 # Fitting the ANN to the Training set
-classifier.fit(X_train, one_hot_y_train, batch_size = 10, epochs =1000)
+classifier.fit(X_train, one_hot_y_train, batch_size = 100, epochs =1000)
 
 
 
@@ -53,6 +70,8 @@ classifier.fit(X_train, one_hot_y_train, batch_size = 10, epochs =1000)
 loss_and_metrics = classifier.evaluate(X_test, one_hot_y_test, batch_size=32)
 print('')
 print('loss_and_metrics : ' + str(loss_and_metrics))
+
+result = classifier.predict(X_test,one_hot_y_test, batch_size=32)
 #%%
 
 # Final_dataset.to_csv('C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\Final_result.csv')
