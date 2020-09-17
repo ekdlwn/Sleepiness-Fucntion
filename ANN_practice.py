@@ -6,13 +6,13 @@ from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedShuffleSplit
 
-dataset_path = 'C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\a.csv'
+dataset_path = 'C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\Final_result.csv'
 dataset = pd.read_csv(dataset_path)
 print(dataset_path)
 
 X_len = len(dataset.columns) - 1 
 y_len = len(dataset.columns) - 1
-X = dataset.iloc[:, 0:X_len]
+X = dataset.iloc[:, 1:X_len]
 y = dataset.iloc[:, y_len]
 
 #%% 데이터 분리
@@ -59,10 +59,10 @@ classifier.add(Dense(units = 12, activation = 'tanh'))
 # Adding the output layer
 classifier.add(Dense(units = 10, activation = 'softmax'))
 # Compiling the ANN
-opt=optimizers.Adam(lr=0.01)
+opt=optimizers.Adam(lr=0.001)
 classifier.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
 # Fitting the ANN to the Training set
-classifier.fit(X_train, one_hot_y_train, batch_size = 100, epochs =1000)
+classifier.fit(X_train, one_hot_y_train, batch_size = 100, epochs =10000)
 
 
 

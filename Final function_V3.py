@@ -62,6 +62,8 @@ def bandpower(data, sf, band, window_sec=None, relative=False):
         bp /= simps(psd, dx=freq_res)
     return bp
             
+
+
 # KSS 점수 자동 변경 용 변수
 n = -1
 
@@ -81,17 +83,13 @@ alpha = [8, 12]
 beta = [12, 30]
 gamma = [30, 100]
             
-case_human_all = np.zeros(shape = 0)
 
-for i in range(1,15):
-    for j in range(1,4):
-        
+for i in range(1,2):
+    for j in range(2,3):
         # PSG 데이터 리딩
         sample_data_folder = f'C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\psg\\{i}-{j}.edf'
         n += 1
         if os.path.isfile(sample_data_folder):
-            # if 문 돌아간 횟수
-            counter = 0
             sample_data_raw_file = os.path.join(sample_data_folder)
             raw = mne.io.read_raw_edf(sample_data_raw_file, exclude=['Cam-Sync'],eog=['EOG-V','EOG-H'],preload=True,stim_channel='PVT')
             
@@ -119,22 +117,22 @@ for i in range(1,15):
             raw.interpolate_bads(reset_bads = False)
             
 
-
+            #%%
             # STI 시간 Annotation
-            sti_events = mne.find_events(raw, stim_channel='PVT', output = 'onset', min_duration = .1, shortest_event = 256 )
+            sti_events = mne.find_events(raw, stim_channel='PVT', output = 'onset', min_duration = .06, shortest_event = 256 )
             onsets = sti_events[:,0] / raw.info['sfreq']-0.5
             durations = [2] * len(onsets)
             descriptions = ['bad_stimulation'] * len(sti_events)
             
             onsets = np.append(onsets,[0])
-            durations.append(540)
+            durations.append(10)
             descriptions.append("bad_ten")
             sti_annot = mne.Annotations(onsets, durations, descriptions)
             raw.set_annotations(sti_annot)
             
             raw.plot(start = 20)
             
-
+#%%
             # eeg_data = raw.copy().pick_types(meg=False, eeg=True, exclude=[])
             # eeg_data_interp = eeg_data.copy().interpolate_bads(reset_bads=False)
             ''' Bad channel 제거 확인할 수 있는 가시화
@@ -194,6 +192,9 @@ for i in range(1,15):
             events = mne.find_events(raw, stim_channel='PVT',output = 'onset', min_duration = 0.04,shortest_event =10)
             '''
             raw_unfil = raw.copy()
+            # Slow drift 제거 및 데이터 필터링
+            # EEG_channels = mne.pick_types(raw.info, eeg = True, ecg= True, eog = True)
+            # raw.plot(duration=10, order=EEG_channels, proj=False, n_channels=len(EEG_channels), remove_dc=False,start=10)
             raw.filter(l_freq = 0.5, h_freq = 50)
 
 
@@ -326,8 +327,7 @@ for i in range(1,15):
             eog_evoked.apply_baseline((None, None))
             # eog_evoked.plot_joint()
             eog_projs, _ = compute_proj_eog(raw, n_eeg=1,reject=None, no_proj=True)
-            # eog 파형 위치 나타내는 topo 그래프
-            # mne.viz.plot_projs_topomap(eog_projs, info=raw.info)
+            mne.viz.plot_projs_topomap(eog_projs, info=raw.info)
             
             '''for title in ('Without', 'With'):
                 if title == 'With':
@@ -344,13 +344,12 @@ for i in range(1,15):
             # EEG 데이터로부터 Power spectral 얻어내는 코드
             # 주요 함수들 import
             Data = raw_filed[0:5,:]
-            
             # Data = raw_unfil[0:5, :]
             sigbufs = Data[0]
             bp_region_dataset = pd.DataFrame()
             bp_all_dataset = pd.DataFrame()
 
-            '''# Power spectral density 가시화
+            # Power spectral density 가시화
             # Define window length (5 seconds)
             win = 20 * sfreq
             freqs, psd = signal.welch(sigbufs[0,:], sfreq, nperseg=win)
@@ -395,62 +394,8 @@ for i in range(1,15):
             total_power = simps(psd, dx=freq_res)
             delta_rel_power = delta_power / total_power
             print('Relative delta power: %.3f' % delta_rel_power)
-            '''
-            [psds_theta, freqs_theta]= mne.time_frequency.psd_welch(raw_filed, fmin = 4, fmax = 8, n_fft = 256*60, n_per_seg = 256, average = None)
-            [psds_alpha, freqs_alpha]= mne.time_frequency.psd_welch(raw_filed, fmin = 8, fmax = 12, n_fft = 256*60, n_per_seg = 256, average = None)
-            [psds_beta, freqs_beta]= mne.time_frequency.psd_welch(raw_filed, fmin = 12, fmax = 30, n_fft = 256*60, n_per_seg = 256, average = None)
             
-            case_theta = np.empty(shape = 0)
-            case_alpha = np.empty(shape = 0)
-            case_beta = np.empty(shape = 0)
-            
-            
-            for i in range(2,3):
-                
-                psds_theta_filed = psds_theta[i,:]
-                psds_alpha_filed = psds_alpha[i,:]
-                psds_beta_filed = psds_beta[i,:]
-                
-                y = ~np.isnan(psds_theta_filed).any(axis = 0)
-                
-                psds_theta_filed = psds_theta_filed[:,y]
-                psds_alpha_filed = psds_alpha_filed[:,y]
-                psds_beta_filed = psds_beta_filed[:,y]
-                
-                psds_theta_filed = np.sum(psds_theta_filed, axis = 0)
-                psds_alpha_filed = np.sum(psds_alpha_filed, axis = 0)
-                psds_beta_filed = np.sum(psds_beta_filed, axis = 0)
-                
-                psds_all_filed = psds_theta_filed + psds_alpha_filed + psds_beta_filed
-                
-                psds_theta_filed_relative = psds_theta_filed / psds_all_filed
-                psds_alpha_filed_relative = psds_alpha_filed / psds_all_filed
-                psds_beta_filed_relative = psds_beta_filed / psds_all_filed
-                
-                KSS = [KSS_data[n]] * len(psds_theta_filed)
-                KSS = np.array(KSS)
-                
-                psds_beta_filed_relative = np.vstack((psds_beta_filed_relative, KSS))
-                
-                if len(case_theta) == 0:
-                    case_theta = psds_theta_filed_relative
-                    case_alpha = psds_alpha_filed_relative
-                    case_beta = psds_beta_filed_relative
-                else:
-                    case_theta = np.hstack((case_theta, psds_theta_filed_relative))
-                    case_alpha = np.hstack((case_alpha, psds_alpha_filed_relative))
-                    case_beta = np.hstack((case_beta, psds_beta_filed_relative))
-            
-            case_all = np.vstack((case_theta, case_alpha, case_beta))
-            
-            if len(case_human_all) == 0:
-                case_human_all = case_all
-            else:
-                case_human_all = np.hstack((case_human_all, case_all))
-            
-            counter =+ 1
-            
-            '''# FFT 분석 간격 설정
+            # FFT 분석 간격 설정
             window_sec = 5*sfreq
             
             bp_merge_dataset = pd.DataFrame([])
@@ -481,9 +426,8 @@ for i in range(1,15):
                 bp_merge_dataset = bp_merge_dataset.append(bp_all_dataset)
                 
             Final_dataset = Final_dataset.append(bp_merge_dataset)
-            '''
-Final_dataset = pd.DataFrame(case_human_all)
-Final_dataset = Final_dataset.transpose()
+            
+
         
 Final_dataset.to_csv('C:\\Users\\ekdlw\\Desktop\\20.07.16\\DROZY\\Final_result.csv')
 
@@ -611,29 +555,3 @@ plot_signal_plus_average(time, signal)
 plot_fft_plus_power(time, signal)
 plot_wavelet(time, signal, scales)
 '''
-#%%
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-
-df = Final_dataset.corr()
-# 그림 사이즈 지정
-fig, ax = plt.subplots( figsize=(7,7) )
-
-# 삼각형 마스크를 만든다(위 쪽 삼각형에 True, 아래 삼각형에 False)
-mask = np.zeros_like(df, dtype=np.bool)
-mask[np.triu_indices_from(mask)] = True
-
-# 히트맵을 그린다
-sns.heatmap(df, 
-            cmap = 'RdYlBu_r', 
-            annot = True,   # 실제 값을 표시한다
-            mask=mask,      # 표시하지 않을 마스크 부분을 지정한다
-            linewidths=.5,  # 경계면 실선으로 구분하기
-            cbar_kws={"shrink": .5},# 컬러바 크기 절반으로 줄이기
-            vmin = -1,vmax = 1   # 컬러바 범위 -1 ~ 1
-           )  
-plt.show()
-
