@@ -23,14 +23,14 @@ Tester_testtime = 19
 i = 0
 
 # 데이터 저장 위치
-Folder = 'C:\\Users\\ekdlw\\Desktop\\TEST\\Bio'
+Folder = r'C:\Users\ekdlw\Desktop\Bio Data Analysis\CSV_file'
 File_name = f'\\{Tester_sex}{Tester_age}{Tester_driverLicense}{Tester_sleepTime}{Tester_testtime}_{i}.csv'
 
 
 # 데이터 저장 시간
 Cutting_time = Frame_rate * Data_Save_time
 
-data, header = pyxdf.load_xdf('C:\\Users\\ekdlw\\Desktop\\TEST\\Bio\\sub-P002\\ses-S001\\eeg\\sub-P002_ses-S001_task-Default_run-001_eeg.xdf')
+data, header = pyxdf.load_xdf(r'C:\Users\ekdlw\Desktop\Bio Data Analysis\XDF_file\20101001.xdf')
 
 for stream in data:
     i = i+1
@@ -43,7 +43,7 @@ for stream in data:
     df1 = pd.concat([df1,df2],axis=1)
     
     File_name = f'\\{Tester_sex}{Tester_age}{Tester_driverLicense}{Tester_sleepTime}{Tester_testtime}_{i}.csv'
-    df1.to_csv(Folder+File_name)
+    df1.to_csv(Folder+File_name, index = False, columns = False)
     
     if isinstance(y, list):
         # list of strings, draw one vertical line for each marker

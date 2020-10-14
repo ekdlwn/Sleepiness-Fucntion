@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 30 19:59:09 2020
-
-@author: ekdlw
-"""
-
-# -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'VideoAcq.ui'
 #
@@ -267,7 +260,7 @@ def createOutlet(index, filename):
                       source_id=str(uuid.uuid4()))
     if sys.platform == "linux":
         videoFile = os.path.splitext(filename)[0]+'.ogv'
-    info.desc().append_child_value("videoFile", filename)
+    info.desc().append_child_value("videoFile", videoFile)
     return StreamOutlet(info)
 
 
